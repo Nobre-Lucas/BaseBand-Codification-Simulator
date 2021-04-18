@@ -5,15 +5,15 @@ import numpy as np
 class Encoding:
 
     def __init__(self, bits):
-        self.bits = bits
-        self.codes = {"NRZI": [],
-                      "HDB3": [],
-                      "Manchester": [],
+        self.codes = {"Bits": [int(bit) for bit in bits],
+                      #   "NRZI": [],
+                      # "HDB3": [],
+                      # "Manchester": [],
                       "AMI": [],
                       "Pseudoternary": []}
 
     def get_bits(self):
-        return self.bits
+        return self.codes["Bits"]
 
     def get_code(self, scheme: str) -> list:
         return self.codes[scheme]
@@ -23,8 +23,8 @@ class Encoding:
 
         level = True
 
-        for bit in self.bits:
-            if bit == "0":
+        for bit in self.codes["Bits"]:
+            if bit == 0:
                 code.append(0)
             else:
                 if level is True:
@@ -40,8 +40,8 @@ class Encoding:
         
         level = True
         
-        for bit in self.bits:
-            if bit == "0":
+        for bit in self.codes["Bits"]:
+            if bit == 0:
                 if level is True:
                     code.append(1)
                 else:
@@ -57,28 +57,28 @@ class Encoding:
         self.codes["Pseudoternary"] = self.pseudoternary()
 
     def plot(self):
-        x = [i for i in range(len(self.bits))]
+        x = [i for i in range(len(self.codes["Bits"]))]
         
-        fig, axs = plt.subplots(3,figsize=(10,10))
+        fig, axs = plt.subplots(len(self.codes),figsize=(10,12))
         fig.tight_layout(pad=3.0)
         
-        major_ticks = np.arange(0, len(self.bits), 1)
+        x_ticks = np.arange(0, len(self.codes["Bits"]), 1)
+        y_ticks = np.array([-1,0,1])
         
-        for y, ax in zip(self.codes.values(), fig.axes):
-            if len(y) > 0:
-                ax.set_xticks(major_ticks)
-                ax.set_yticks(major_ticks)
-                ax.grid(which='both')
-                
-                ax.plot(x,y,color='red',drawstyle="steps-post")
-                ax.set_title("AMI")
+        for t, y, ax in zip(self.codes.keys(), self.codes.values(), axs):
+            ax.set_xticks(x_ticks)
+            ax.set_yticks(y_ticks)
+            ax.grid(which="both")
+            ax.set_ylim(-2,2)
+            ax.set_title(t)
+            ax.plot(x, y, c="red", drawstyle="steps-post")
         
         plt.show()
         
 
 bits = Encoding("01001100011")
 bits.encode()
-print(bits.get_bits())
-print(bits.get_code("AMI"))
-print(bits.get_code("Pseudoternary"))
+print("Bits:", bits.get_bits())
+print("AMIM:", bits.get_code("AMI"))
+print("PSTM:", bits.get_code("Pseudoternary"))
 bits.plot()
