@@ -12,10 +12,11 @@ class NRZI:
         if valida:
             self.dados = dados
         else:
-            raise ValueError ("A dados só pode possuir bits 0 ou 1")
+            raise ValueError ("Os dados só podem possuir bits 0 ou 1")
 
         self.dados = dados
-        self.mensagem = [1]
+        self.mensagem = [1, 1]
+        self.timestamp = [0]
 
     def converte_dados (self):
 
@@ -30,7 +31,7 @@ class NRZI:
 
         self.converte_dados()
         
-        timestamp = [0]
+        # self.timestamp = [0]
         counter = 0
         estados = (1, -1)
         estado = 0
@@ -44,13 +45,15 @@ class NRZI:
                 self.mensagem.append(estados[estado])
                 self.mensagem.append(estados[estado])
 
-                timestamp.append(counter)
-                timestamp.append(counter)
+                self.timestamp.append(counter)
+                self.timestamp.append(counter)
 
             elif i == 0:
                 self.mensagem.append(estados[estado])
-                timestamp.append(counter)
+                self.timestamp.append(counter)
 
-        plt.plot(timestamp, self.mensagem)
+        self.mensagem.pop()
+
+        plt.plot(self.timestamp, self.mensagem)
         plt.show()
         
