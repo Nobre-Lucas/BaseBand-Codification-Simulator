@@ -5,12 +5,21 @@ import numpy as np
 class Encoding:
 
     def __init__(self, bits):
-        self.codes = {"Bits": [int(bit) for bit in bits],
-                      #   "NRZI": [],
-                      # "HDB3": [],
-                      # "Manchester": [],
-                      "AMI": [],
-                      "Pseudoternary": []}
+
+        valid = True
+        for i in bits:
+            if (i != '0') and (i != '1'):
+                valid = False
+
+        if valid = True:
+            self.codes = {"Bits": [int(bit) for bit in bits],
+                        # "NRZI": [],
+                        # "HDB3": [],
+                        # "Manchester": [],
+                        "AMI": [],
+                        "Pseudoternary": []}
+        else:
+            raise ValueError ("Os dados só podem possuir bits 0 ou 1")
 
     def get_bits(self):
         return self.codes["Bits"]
