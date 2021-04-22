@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class Encoding:
 
-    def __init__(self, bits):
+    def __init__(self, bits: str):
 
         valid = True
         for i in bits:
@@ -20,11 +19,13 @@ class Encoding:
         else:
             raise ValueError ("Os dados só podem possuir bits 0 ou 1")
 
-    def get_bits(self):
+    def get_bits(self) -> list:
         return self.codes["Bits"]
+
 
     def get_code(self, scheme: str) -> list:
         return self.codes[scheme]
+
 
     def nrzi(self) -> list:
         code = [1, 1]
@@ -55,12 +56,49 @@ class Encoding:
         return code, timestamp
 
 
-    def tboq(self):
-        pass
+    def tboq(self) -> list:
+        translate_table = {"00": (+1, -1),
+                           "01": (+3, -3),
+                           "10": (-1, +1),
+                           "11": (-3, +3)}
+        
+        o_bits = [0] if (len(self.codes["Bits"]) % 2 != 0) else []
+        o_bits += [str(i) for i in self.codes["Bits"]]
+        
+        dibits = [[o_bits[i], o_bits[i+1]] for i in range(0, len(o_bits), 2)]
+        
+        code = []
+        timestamp = [0]
+        
+        previous_level = True # T if (previous > 0 or initial) else F
+        counter = 0
+        
+        for dibit in dibits:
+            
+            counter += 1
+            
+            if previous_level is True:
+                actual_level = translate_table["".join(dibit)][0]
+            else:
+                actual_level = translate_table["".join(dibit)][1]
+                
+            code.append(actual_level)
+            code.append(actual_level)
+                
+            timestamp.append(counter)
+            timestamp.append(counter)
+            
+            previous_level = True if actual_level > 0 else False
+            
+        timestamp.pop()
+        
+        return code, timestamp
+    
     
     def encode(self):
         self.codes["NRZI"] = self.nrzi()[0]
-        self.codes["2B1Q"] = self.tboq()
+        self.codes["2B1Q"] = self.tboq()[0]
+
 
     def plot(self, scheme: str):
         
@@ -70,7 +108,11 @@ class Encoding:
         if scheme == "NRZI":
             x_axis = self.nrzi()[1]
             y_axis = self.codes["NRZI"]
-        
+            
+        elif scheme == "2B1Q":
+            x_axis = self.tboq()[1]
+            y_axis = self.codes["2B1Q"]
+            
         else:
             raise ValueError("Available schemes: NRZI, HDB3, Manchester, 2B1Q")
 
@@ -78,10 +120,10 @@ class Encoding:
         plt.show()
         
 
-# bits = Encoding("01001100011")
-bits = Encoding("10110010")
+bits = Encoding("110011001011")
 bits.encode()
 print("Bits:", bits.get_bits())
 print("NRZI:", bits.get_code("NRZI"))
-print("2B1Q:", bits.get_code("2Q1Q"))
-bits.plot()
+print("2B1Q:", bits.get_code("2B1Q"))
+
+bits.plot("2B1Q")
