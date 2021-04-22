@@ -11,7 +11,7 @@ class Encoding:
             if (i != '0') and (i != '1'):
                 valid = False
 
-        if valid = True:
+        if valid == True:
             self.codes = {"Bits": [int(bit) for bit in bits],
                           "NRZI": [],
                         # "HDB3": [],
