@@ -17,7 +17,7 @@ class Encoding:
                         # "Manchester": [],
                           "2B1Q": []}
         else:
-            raise ValueError ("Os dados só podem possuir bits 0 ou 1")
+            raise ValueError ("Available entry: characters 1 or 0")
 
     def get_bits(self) -> list:
         return self.codes["Bits"]
@@ -78,17 +78,17 @@ class Encoding:
             counter += 1
             
             if previous_level is True:
-                actual_level = translate_table["".join(dibit)][0]
+                current_level = translate_table["".join(dibit)][0]
             else:
-                actual_level = translate_table["".join(dibit)][1]
+                current_level = translate_table["".join(dibit)][1]
                 
-            code.append(actual_level)
-            code.append(actual_level)
+            code.append(current_level)
+            code.append(current_level)
                 
             timestamp.append(counter)
             timestamp.append(counter)
             
-            previous_level = True if actual_level > 0 else False
+            previous_level = True if current_level > 0 else False
             
         timestamp.pop()
         
