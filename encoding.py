@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class Encoding:
 
-    def __init__(self, bits):
+    def __init__(self, bits: str):
 
         valid = True
         for i in bits:
@@ -16,16 +15,17 @@ class Encoding:
                           "NRZI": [],
                         # "HDB3": [],
                         # "Manchester": [],
-                          "AMI": [],
-                          "Pseudoternary": []}
+                          "2B1Q": []}
         else:
             raise ValueError ("Os dados só podem possuir bits 0 ou 1")
 
-    def get_bits(self):
+    def get_bits(self) -> list:
         return self.codes["Bits"]
+
 
     def get_code(self, scheme: str) -> list:
         return self.codes[scheme]
+
 
     def nrzi(self) -> list:
         code = [1, 1]
@@ -56,91 +56,74 @@ class Encoding:
         return code, timestamp
 
 
-    def ami(self) -> list:
+    def tboq(self) -> list:
+        translate_table = {"00": (+1, -1),
+                           "01": (+3, -3),
+                           "10": (-1, +1),
+                           "11": (-3, +3)}
+        
+        o_bits = [0] if (len(self.codes["Bits"]) % 2 != 0) else []
+        o_bits += [str(i) for i in self.codes["Bits"]]
+        
+        dibits = [[o_bits[i], o_bits[i+1]] for i in range(0, len(o_bits), 2)]
+        
         code = []
-
-        level = True
-
-        for bit in self.codes["Bits"]:
-            if bit == 0:
-                code.append(0)
+        timestamp = [0]
+        
+        previous_level = True # T if (previous > 0 or initial) else F
+        counter = 0
+        
+        for dibit in dibits:
+            
+            counter += 1
+            
+            if previous_level is True:
+                actual_level = translate_table["".join(dibit)][0]
             else:
-                if level is True:
-                    code.append(1)
-                else:
-                    code.append(-1)
-                level = not level
-
-        return code
-
-    def pseudoternary(self) -> list:
-        code = []
+                actual_level = translate_table["".join(dibit)][1]
+                
+            code.append(actual_level)
+            code.append(actual_level)
+                
+            timestamp.append(counter)
+            timestamp.append(counter)
+            
+            previous_level = True if actual_level > 0 else False
+            
+        timestamp.pop()
         
-        level = True
-        
-        for bit in self.codes["Bits"]:
-            if bit == 0:
-                if level is True:
-                    code.append(1)
-                else:
-                    code.append(-1)
-                level = not level
-            else:
-                code.append(0)
-        
-        return code
+        return code, timestamp
+    
     
     def encode(self):
         self.codes["NRZI"] = self.nrzi()[0]
-        self.codes["AMI"] = self.ami()
-        self.codes["Pseudoternary"] = self.pseudoternary()
+        self.codes["2B1Q"] = self.tboq()[0]
 
-    def plot(self):
-        # x = [i for i in range(len(self.codes["Bits"]))]
-        
-        # fig, axs = plt.subplots(len(self.codes),figsize=(10,12))
-        # fig.tight_layout(pad=3.0)
-        
-        # x_ticks = np.arange(0, len(self.codes["Bits"]), 1)
-        # y_ticks = np.array([-1,0,1])
-        
-        # for t, y, ax in zip(self.codes.keys(), self.codes.values(), axs):
-        #     ax.set_xticks(x_ticks)
-        #     ax.set_yticks(y_ticks)
-        #     ax.grid(which="both")
-        #     ax.set_ylim(-2,2)
-        #     ax.set_title(t)
-        #     ax.plot(x, y, c="red", drawstyle="steps-post")
-        
-        # plt.show()
 
+    def plot(self, scheme: str):
+        
         x_axis = []
         y_axis = []
 
-        print("1) NRZI")
-        print("2) HDB3")
-        print("3) Manchester")
-        print("4) 2BIQ")
-        
-        option = int(input("Qual codificação você gostaria de usar? R:"))
-
-        if option == 1:
+        if scheme == "NRZI":
             x_axis = self.nrzi()[1]
             y_axis = self.codes["NRZI"]
-
-        elif option == 4:
-            x_axis = [i for i in range(len(self.codes["Bits"]))]
-            y_axis = self.codes["AMI"]
+            
+        elif scheme == "2B1Q":
+            x_axis = self.tboq()[1]
+            y_axis = self.codes["2B1Q"]
+            
+        else:
+            raise ValueError("Available schemes: NRZI, HDB3, Manchester, 2B1Q")
 
         plt.plot(x_axis, y_axis)
         plt.show()
         
 
-# bits = Encoding("01001100011")
-bits = Encoding("10110010")
+bits = Encoding("110011001011")
 bits.encode()
 print("Bits:", bits.get_bits())
 print("NRZI:", bits.get_code("NRZI"))
-print("AMIM:", bits.get_code("AMI"))
-print("PSTM:", bits.get_code("Pseudoternary"))
-bits.plot()
+print("2B1Q:", bits.get_code("2B1Q"))
+
+bits.plot("2B1Q")
