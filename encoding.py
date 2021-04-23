@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 class Encoding:
 
@@ -105,9 +105,13 @@ class Encoding:
         x_axis = []
         y_axis = []
 
+        bit_code = [str(i) for i in self.codes["Bits"]]
+
         if scheme == "NRZI":
             x_axis = self.nrzi()[1]
             y_axis = self.codes["NRZI"]
+
+            bit_code.insert(0, '')
             
         elif scheme == "2B1Q":
             x_axis = self.tboq()[1]
@@ -116,14 +120,16 @@ class Encoding:
         else:
             raise ValueError("Available schemes: NRZI, HDB3, Manchester, 2B1Q")
 
-        plt.plot(x_axis, y_axis)
+        plt.xticks(np.arange(len(x_axis)), bit_code)
+        plt.plot(x_axis, y_axis, 'black', linewidth=2)
+        plt.grid()
         plt.show()
         
 
-bits = Encoding("110011001011")
+bits = Encoding("10110010")
 bits.encode()
 print("Bits:", bits.get_bits())
 print("NRZI:", bits.get_code("NRZI"))
 print("2B1Q:", bits.get_code("2B1Q"))
 
-bits.plot("2B1Q")
+bits.plot("NRZI")
