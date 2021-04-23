@@ -105,12 +105,11 @@ class Encoding:
         x_axis = []
         y_axis = []
 
-        bit_code = [str(i) for i in self.codes["Bits"]]
-
         if scheme == "NRZI":
             x_axis = self.nrzi()[1]
             y_axis = self.codes["NRZI"]
 
+            bit_code = [str(i) for i in self.codes["Bits"]]
             bit_code.insert(0, '')
             plt.yticks([-1, 0, 1], ['-1', '', '1'])
             
