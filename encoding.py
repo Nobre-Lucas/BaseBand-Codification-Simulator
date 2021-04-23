@@ -112,6 +112,7 @@ class Encoding:
             y_axis = self.codes["NRZI"]
 
             bit_code.insert(0, '')
+            plt.yticks([-1, 0, 1], ['-1', '', '1'])
             
         elif scheme == "2B1Q":
             x_axis = self.tboq()[1]
