@@ -13,7 +13,7 @@ class Encoding:
         if valid == True:
             self.codes = {"Bits": [int(bit) for bit in bits],
                           "NRZI": [],
-                        # "HDB3": [],
+                          "HDB3": [],
                         # "Manchester": [],
                           "2B1Q": []}
         else:
@@ -52,6 +52,113 @@ class Encoding:
                 timestamp.append(counter)
 
         code.pop()
+
+        return code, timestamp
+
+    def hdb3(self):
+        consecutive_zero_counter = 0
+        counter = 0
+        informations_number = 0
+        VIOLATION_NUMBER = 3
+        timestamp = []
+        code = []
+        information_polarity = True
+        violation_polarity = True
+
+        for i in range(len(self.codes["Bits"])):
+            posterior_sublist = self.codes["Bits"][i+1:i+4]
+
+            if self.codes["Bits"][i] == 1:
+                consecutive_zero_counter = 0
+                if information_polarity == True:
+                    timestamp.append(counter)
+                    code.append(1)
+                    counter += 0.5
+                    timestamp.append(counter)
+                    code.append(1)
+                    timestamp.append(counter)
+                    code.append(0)
+                    counter += 0.5
+                    timestamp.append(counter)
+                    code.append(0)
+                elif information_polarity == False:
+                    timestamp.append(counter)
+                    code.append(-1)
+                    counter += 0.5
+                    timestamp.append(counter)
+                    code.append(-1)
+                    timestamp.append(counter)
+                    code.append(0)
+                    counter += 0.5
+                    timestamp.append(counter)
+                    code.append(0)
+                informations_number += 1
+                information_polarity = not information_polarity
+
+            elif self.codes["Bits"][i] == 0:
+                if (consecutive_zero_counter == 0) and (sum(posterior_sublist) == 0) and (len(posterior_sublist) == 3) and (informations_number%2 == 1 and informations_number != 1):
+                    if (violation_polarity == True):
+                        timestamp.append(counter)
+                        code.append(1)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(1)
+                        timestamp.append(counter)
+                        code.append(0)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(0)
+                    elif (violation_polarity == False):
+                        timestamp.append(counter)
+                        code.append(-1)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(-1)
+                        timestamp.append(counter)
+                        code.append(0)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(0)
+                    consecutive_zero_counter += 1
+                
+                elif (consecutive_zero_counter == VIOLATION_NUMBER):
+                    if (violation_polarity == True):
+                        timestamp.append(counter)
+                        code.append(1)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(1)
+                        timestamp.append(counter)
+                        code.append(0)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(0)
+                    elif (violation_polarity == False):
+                        timestamp.append(counter)
+                        code.append(-1)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(-1)
+                        timestamp.append(counter)
+                        code.append(0)
+                        counter += 0.5
+                        timestamp.append(counter)
+                        code.append(0)
+
+                    violation_polarity = not violation_polarity
+                    consecutive_zero_counter = 0
+                
+                elif (consecutive_zero_counter != VIOLATION_NUMBER):
+                    timestamp.append(counter)
+                    code.append(0)
+                    counter += 1
+                    timestamp.append(counter)
+                    code.append(0)
+
+                    consecutive_zero_counter += 1
+
+            else:
+                raise ValueError("A dados só podem possuir bits 0 ou 1")
 
         return code, timestamp
 
@@ -97,6 +204,7 @@ class Encoding:
 
     def encode(self):
         self.codes["NRZI"] = self.nrzi()[0]
+        self.codes["HDB3"] = self.hdb3()[0]
         self.codes["2B1Q"] = self.tboq()[0]
 
 
@@ -115,6 +223,10 @@ class Encoding:
             bit_code.insert(0, '')
             plt.yticks([-1, 0, 1], ['-1', '', '1'])
 
+        elif scheme == "HDB3":
+            x_axis = self.hdb3()[1]
+            y_axis = self.codes["HDB3"]
+           
         elif scheme == "2B1Q":
             x_axis = self.tboq()[1]
             y_axis = self.codes["2B1Q"]
@@ -137,11 +249,10 @@ class Encoding:
         plt.grid()
         plt.show()
 
-
 bits = Encoding("10110010")
 bits.encode()
 print("Bits:", bits.get_bits())
 print("NRZI:", bits.get_code("NRZI"))
 print("2B1Q:", bits.get_code("2B1Q"))
 
-bits.plot("2B1Q")
+bits.plot("HDB3")
