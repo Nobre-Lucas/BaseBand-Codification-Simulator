@@ -167,6 +167,9 @@ class Encoding:
                     consecutive_zero_counter += 1
                     converted_data_y.append(0)
 
+            else:
+                raise ValueError("A dados só podem possuir bits 0 ou 1")
+
         return code, timestamp, converted_data
 
 
@@ -344,4 +347,4 @@ print("HDB3:", bits.get_code("HDB3"))
 print("Manchester:", bits.get_code("Manchester"))
 print("2B1Q:", bits.get_code("2B1Q"))
 
-bits.plot("2B1Q")
+bits.plot("HDB3")
