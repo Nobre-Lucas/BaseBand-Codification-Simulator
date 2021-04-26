@@ -1,84 +1,71 @@
+from encoding import Encoding
+
 import matplotlib.pyplot as plt
 import numpy as np
 
+class Multilevel(Encoding):
 
-class Encoding:
+    def __init__(self, bits:str):
+        super().__init__(bits)
+        self.code = self.encode()
+        
 
-    def __init__(self, bits):
-        self.bits = bits
-        self.codes = {"NRZI": [],
-                      "HDB3": [],
-                      "Manchester": [],
-                      "AMI": [],
-                      "Pseudoternary": []}
+    def encode(self) -> tuple:
+        translate_table = {"00": (+1, -1),
+                           "01": (+3, -3),
+                           "10": (-1, +1),
+                           "11": (-3, +3)}
 
-    def get_bits(self):
-        return self.bits
+        o_bits = [0] if (len(self.bits) % 2 != 0) else []
+        o_bits += [str(i) for i in self.bits]
 
-    def get_code(self, scheme: str) -> list:
-        return self.codes[scheme]
+        dibits = [[o_bits[i], o_bits[i+1]] for i in range(0, len(o_bits), 2)]
 
-    def ami(self) -> list:
         code = []
+        timestamp = [0]
 
-        level = True
+        previous_level = True
+        counter = 0
 
-        for bit in self.bits:
-            if bit == "0":
-                code.append(0)
+        for dibit in dibits:
+
+            counter += 1
+
+            if previous_level is True:
+                current_level = translate_table["".join(dibit)][0]
             else:
-                if level is True:
-                    code.append(1)
-                else:
-                    code.append(-1)
-                level = not level
+                current_level = translate_table["".join(dibit)][1]
 
-        return code
+            code.append(current_level)
+            code.append(current_level)
 
-    def pseudoternary(self) -> list:
-        code = []
-        
-        level = True
-        
-        for bit in self.bits:
-            if bit == "0":
-                if level is True:
-                    code.append(1)
-                else:
-                    code.append(-1)
-                level = not level
-            else:
-                code.append(0)
-        
-        return code
+            timestamp.append(counter)
+            timestamp.append(counter)
+
+            previous_level = True if current_level > 0 else False
+
+        timestamp.pop()
+
+        return code, timestamp
     
-    def encode(self):
-        self.codes["AMI"] = self.ami()
-        self.codes["Pseudoternary"] = self.pseudoternary()
-
     def plot(self):
-        x = [i for i in range(len(self.bits))]
         
-        fig, axs = plt.subplots(3,figsize=(10,10))
-        fig.tight_layout(pad=3.0)
-        
-        major_ticks = np.arange(0, len(self.bits), 1)
-        
-        for y, ax in zip(self.codes.values(), fig.axes):
-            if len(y) > 0:
-                ax.set_xticks(major_ticks)
-                ax.set_yticks(major_ticks)
-                ax.grid(which='both')
-                
-                ax.plot(x,y,color='red',drawstyle="steps-post")
-                ax.set_title("AMI")
-        
-        plt.show()
-        
+        fig, axs = plt.subplots(1)
 
-bits = Encoding("01001100011")
-bits.encode()
-print(bits.get_bits())
-print(bits.get_code("AMI"))
-print(bits.get_code("Pseudoternary"))
-bits.plot()
+        x_axis = self.code[1]
+        y_axis = self.code[0]
+        
+        plt.ylim(-3.1, 3.1)
+        
+        o_bits = [0] if (len(self.bits) % 2 != 0) else []
+        o_bits += [str(i) for i in self.bits]
+        
+        bit_code = ["".join([o_bits[i], o_bits[i+1]]) for i in range(0, len(o_bits), 2)]
+        bit_code = ['' if i % 2 == 0 else bit_code[i//2] for i in range(len(bit_code)*2)] + ['']
+                                
+        plt.xticks(np.arange(len(x_axis))/2, bit_code)
+        plt.yticks([-3, -1, 0, 1, 3], ['-3', '-1', '', '1', '3'])
+        
+        plt.plot(x_axis, y_axis, 'black', linewidth=2)
+        plt.grid()
+        plt.show()

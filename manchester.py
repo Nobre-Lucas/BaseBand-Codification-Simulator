@@ -1,98 +1,88 @@
+from encoding import Encoding
+
 import matplotlib.pyplot as plt
+import numpy as np
 
-class Manchester:
-    
-    def __init__(self, data):
+class Manchester(Encoding):
+
+    def __init__(self, bits:str):
+        super().__init__(bits)
+        self.code = self.encode()
         
-        validation = True
-        for i in data:
-            if(i != '0') and (i != '1'):
-                validation = False
-                
-        if validation:
-            self.data = data
-        else:
-            raise ValueError ("Os dados só podem possuir bits 0 ou 1")
 
-        self.data =  [int(bit) for bit in data]
-        ternary = 1 if self.data[0] == 0 else 0
-        self.mensagem = [1 if self.data[0] == 0 else 0]
-        self.timestamp = []
-    
+    def encode(self) -> tuple:
+        code = [1 if self.bits[0] == 0 else 0]
+        timestamp = []
         
-    def convert_data(self):
-
-            aux = []
-    
-            for i in self.data:
-                aux.append(int(i))
-    
-            self.data = aux
-            
-    def transmit_message(self):
-        self.convert_data()
-            
-        estados = (1, 0)
         counter = 0
-        contador2 = 0
-        for i in self.data: #10110010
-            
-            if i == 1:
-                self.mensagem.append(estados[1])
-                self.timestamp.append(counter)
-                counter += 0.5
-
-                self.mensagem.append(estados[0])
-                self.timestamp.append(counter)
-
-                self.mensagem.append(estados[0])
-                self.timestamp.append(counter)
-                counter += 0.5
-
-            elif i == 0:
-
-                self.mensagem.append(estados[0])
-                self.timestamp.append(counter)  
-                counter += 0.5
-
-                self.mensagem.append(estados[1])
-                self.timestamp.append(counter)
-
-                self.mensagem.append(estados[1])
-                self.timestamp.append(counter)
-                counter += 0.5
-            
-            if contador2 < len(self.data)-1:
-                if (self.data[contador2+1] == 0 and self.data[contador2] == 0):
-                    self.mensagem.append(estados[0])
-                    self.timestamp.append(counter)
-                    print("teste")
-
-                if (self.data[contador2+1] == 1 and self.data[contador2] == 1):
-                    self.mensagem.append(estados[1])
-                    self.timestamp.append(counter)
-                    print("teste2")
-            contador2 += 1
-
-        if(self.data[-1] == 1):
+        states = (1, 0)
+        counter2 = 0
+        
+        for i in self.bits:
+          if i == 1:
+            code.append(states[1])
+            timestamp.append(counter)
+            counter += 0.5
+             
+            code.append(states[0])
+            timestamp.append(counter)
+        
+            code.append(states[0])
+            timestamp.append(counter)
+            counter += 0.5
+        
+          elif i == 0:
+            code.append(states[0])
+            timestamp.append(counter)  
+            counter += 0.5
+        
+            code.append(states[1])
+            timestamp.append(counter)
+        
+            code.append(states[1])
+            timestamp.append(counter)
+            counter += 0.5
+        
+              
+          if counter2 < len(self.bits)-1:
+            if (self.bits[counter2+1] == 0 and self.bits[counter2] == 0):
+              code.append(states[0])
+              timestamp.append(counter)
+        
+            if (self.bits[counter2+1] == 1 and self.bits[counter2] == 1):
+              code.append(states[1])
+              timestamp.append(counter)
+          counter2 += 1
+        
+        if (self.bits[-1] == 1):
+          
+          code.append(states[0])
+          timestamp.append(counter)  
+        
+        if (self.bits[-1] == 0):
+          
+          code.append(states[1])
+          timestamp.append(counter)
+        
+        code.pop() 
+        
+        return code, timestamp 
     
-            self.mensagem.append(estados[0])
-            self.timestamp.append(counter)  
+    def plot(self):
+        
+        fig, axs = plt.subplots(1)
 
-        if(self.data[-1] == 0):
-    
-            self.mensagem.append(estados[1])
-            self.timestamp.append(counter)  
+        x_axis = self.code[1]
+        y_axis = self.code[0]
 
-        print(self.mensagem)
-        print(self.timestamp)
+        bit_code = []
+        for i in self.bits:
+            bit_code.append('')
+            bit_code.append(i)
 
-        self.mensagem.pop()
+        plt.yticks([0, 1], [ '0', '1'])
+        plt.xticks(np.arange(0, len(x_axis), 0.5), bit_code)
 
-        plt.plot(self.timestamp, self.mensagem)
+        plt.plot(x_axis, y_axis, 'black', linewidth=2)
+        plt.grid()
         plt.show()
-
-
-inputbits = Manchester("10011001")
-inputbits.transmit_message()
-

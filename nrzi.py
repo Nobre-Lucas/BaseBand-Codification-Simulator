@@ -1,59 +1,57 @@
+from encoding import Encoding
+
 import matplotlib.pyplot as plt
+import numpy as np
 
-class NRZI:
+class NRZI(Encoding):
 
-    def __init__ (self, dados):
-
-        valida = True
-        for i in dados:
-            if (i != '0') and (i != '1'):
-                valida = False
-
-        if valida:
-            self.dados = dados
-        else:
-            raise ValueError ("Os dados só podem possuir bits 0 ou 1")
-
-        self.dados = dados
-        self.mensagem = [1, 1]
-        self.timestamp = [0]
-
-    def converte_dados (self):
-
-        aux = []
-
-        for i in self.dados:
-            aux.append(int(i))
-
-        self.dados = aux
-
-    def transmitir_mensagem (self):
-
-        self.converte_dados()
+    def __init__(self, bits:str):
+        super().__init__(bits)
+        self.code = self.encode()
         
-        # self.timestamp = [0]
-        counter = 0
-        estados = (1, -1)
-        estado = 0
 
-        for i in self.dados: #10110010
+    def encode(self) -> tuple:
+        code = [1, 1]
+        timestamp = [0]
+
+        counter = 0
+        states = (1, -1)
+        state = 0
+
+        for i in self.bits: #10110010
 
             counter += 1
-            
-            if i == 1:        
-                estado = 1 if (estado == 0) else 0
-                self.mensagem.append(estados[estado])
-                self.mensagem.append(estados[estado])
 
-                self.timestamp.append(counter)
-                self.timestamp.append(counter)
+            if i == 1:
+                state = 1 if (state == 0) else 0
+                code.append(states[state])
+                code.append(states[state])
+
+                timestamp.append(counter)
+                timestamp.append(counter)
 
             elif i == 0:
-                self.mensagem.append(estados[estado])
-                self.timestamp.append(counter)
+                code.append(states[state])
+                timestamp.append(counter)
 
-        self.mensagem.pop()
+        code.pop()
 
-        plt.plot(self.timestamp, self.mensagem)
-        plt.show()
+        return code, timestamp
+    
+    
+    def plot(self):
         
+        fig, axs = plt.subplots(1)
+
+        x_axis = self.code[1]
+        y_axis = self.code[0]
+
+        bit_code = [str(i) for i in self.bits]
+        bit_code.insert(0, '')
+        
+        plt.xticks(np.arange(len(x_axis)), bit_code)
+        plt.yticks([-1, 0, 1], ['-1', '', '1'])
+
+        plt.plot(x_axis, y_axis, 'black', linewidth=2)
+        plt.grid()
+        plt.show()
