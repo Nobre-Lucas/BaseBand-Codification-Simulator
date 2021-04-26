@@ -62,6 +62,8 @@ class Encoding:
         VIOLATION_NUMBER = 3
         timestamp = []
         code = []
+        converted_data = []
+        converted_data_y = []
         information_polarity = True
         violation_polarity = True
 
@@ -69,6 +71,7 @@ class Encoding:
             posterior_sublist = self.codes["Bits"][i+1:i+4]
 
             if self.codes["Bits"][i] == 1:
+                converted_data.append(1)
                 consecutive_zero_counter = 0
                 if information_polarity == True:
                     timestamp.append(counter)
@@ -81,6 +84,7 @@ class Encoding:
                     counter += 0.5
                     timestamp.append(counter)
                     code.append(0)
+                    converted_data_y.append(1)
                 elif information_polarity == False:
                     timestamp.append(counter)
                     code.append(-1)
@@ -92,10 +96,12 @@ class Encoding:
                     counter += 0.5
                     timestamp.append(counter)
                     code.append(0)
+                    converted_data_y.append(-1)
                 informations_number += 1
                 information_polarity = not information_polarity
 
             elif self.codes["Bits"][i] == 0:
+                converted_data.append(0)
                 if (consecutive_zero_counter == 0) and (sum(posterior_sublist) == 0) and (len(posterior_sublist) == 3) and (informations_number%2 == 1 and informations_number != 1):
                     if (violation_polarity == True):
                         timestamp.append(counter)
@@ -108,6 +114,7 @@ class Encoding:
                         counter += 0.5
                         timestamp.append(counter)
                         code.append(0)
+                        converted_data_y.append("+s")
                     elif (violation_polarity == False):
                         timestamp.append(counter)
                         code.append(-1)
@@ -119,6 +126,7 @@ class Encoding:
                         counter += 0.5
                         timestamp.append(counter)
                         code.append(0)
+                        converted_data_y.append("-s")
                     consecutive_zero_counter += 1
                 
                 elif (consecutive_zero_counter == VIOLATION_NUMBER):
@@ -133,6 +141,7 @@ class Encoding:
                         counter += 0.5
                         timestamp.append(counter)
                         code.append(0)
+                        converted_data_y.append("+v")
                     elif (violation_polarity == False):
                         timestamp.append(counter)
                         code.append(-1)
@@ -144,7 +153,7 @@ class Encoding:
                         counter += 0.5
                         timestamp.append(counter)
                         code.append(0)
-
+                        converted_data_y.append("-v")
                     violation_polarity = not violation_polarity
                     consecutive_zero_counter = 0
                 
@@ -156,11 +165,9 @@ class Encoding:
                     code.append(0)
 
                     consecutive_zero_counter += 1
+                    converted_data_y.append(0)
 
-            else:
-                raise ValueError("A dados só podem possuir bits 0 ou 1")
-
-        return code, timestamp
+        return code, timestamp, converted_data
 
 
     def manchester(self) -> list:
@@ -201,12 +208,10 @@ class Encoding:
           if (self.codes["Bits"][counter2+1] == 0 and self.codes["Bits"][counter2] == 0):
             code.append(states[0])
             timestamp.append(counter)
-            print("teste")
 
           if (self.codes["Bits"][counter2+1] == 1 and self.codes["Bits"][counter2] == 1):
             code.append(states[1])
             timestamp.append(counter)
-            print("teste2")
         counter2 += 1
       
       if (self.codes["Bits"][-1] == 1):
@@ -290,7 +295,25 @@ class Encoding:
         elif scheme == "HDB3":
             x_axis = self.hdb3()[1]
             y_axis = self.codes["HDB3"]
-           
+            converted_data = self.hdb3()[2]
+
+            plt.xticks(np.arange(len(converted_data)), converted_data)
+            bit_code = [str(i) for i in self.codes["Bits"]]
+            bit_code.insert(0, '')
+            plt.yticks([-1, 0, 1], ['-1', '', '1'])
+
+        elif scheme == "Manchester":
+            x_axis = self.manchester()[1]
+            y_axis = self.codes["Manchester"]
+
+            bit_code = []
+            for i in self.codes["Bits"]:
+              bit_code.append('')
+              bit_code.append(i)
+
+            plt.yticks([0, 1], [ '0', '1'])
+            plt.xticks(np.arange(0, len(x_axis), 0.5), bit_code)
+            
         elif scheme == "2B1Q":
             x_axis = self.tboq()[1]
             y_axis = self.codes["2B1Q"]
@@ -305,18 +328,6 @@ class Encoding:
                                     
             plt.xticks(np.arange(len(x_axis))/2, bit_code)
             plt.yticks([-3, -1, 0, 1, 3], ['-3', '-1', '', '1', '3'])
-
-        elif scheme == "Manchester":
-            x_axis = self.manchester()[1]
-            y_axis = self.codes["Manchester"]
-
-            bit_code = []
-            for i in self.codes["Bits"]:
-              bit_code.append('')
-              bit_code.append(i)
-
-            plt.yticks([0, 1], [ '0', '1'])
-            plt.xticks(np.arange(0, len(x_axis), 0.5), bit_code)
             
         else:
             raise ValueError("Available schemes: NRZI, HDB3, Manchester, 2B1Q")
@@ -329,7 +340,8 @@ bits = Encoding("10110010")
 bits.encode()
 print("Bits:", bits.get_bits())
 print("NRZI:", bits.get_code("NRZI"))
+print("HDB3:", bits.get_code("HDB3"))
 print("Manchester:", bits.get_code("Manchester"))
 print("2B1Q:", bits.get_code("2B1Q"))
 
-bits.plot("Manchester")
+bits.plot("2B1Q")
